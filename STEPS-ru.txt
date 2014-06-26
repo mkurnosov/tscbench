@@ -1,0 +1,30 @@
+Настраиваем аппаратные подсистемы (BIOS)
+========================================
+* Отключаем Intel Hyper-Threading
+* Отключаем управление питанием (CPU Power Management, Intel SpeedStep, AMD Cool'n'Quiet)
+* Отключаем управление частотой (Intel TurboBoost, AMD Turbo Core)
+* Отключаем System Management Interrupts (SMI) [по возможности]
+* Отключаем NUMA Memory Node Interleaving 
+
+Настраиваем программное окружение
+=================================
+* В случае отсутствия инвариантного TSC загружаем ядро с параметрами:
+  processor.max_cstate=1, idle=poll 
+  (можно использовать подход с захватом /dev/cpu_dma_latency)
+
+* Отключаем irqbalance (освобождаем одно ядро для измерений, например последнее)
+  $ service irqbalance stop
+  $ cat /proc/interrupts
+  
+* Привязываем поток к процессору (sched_setaffinity(), taskset, numactl)
+  Переводим поток в класс realtime-задач (sched_setscheduler: максимальный приоритет + SCHED_FIFO; nice)
+  
+* Настраиваем политику выделения памяти: только с локального/удаленного NUMA-узла 
+  (set_mempolicy(), numa_set_membind(); numactl)
+  Запрещаем подкачку страниц (paging, swapping: mlockall()/munlockall())
+
+Запускаем измерения
+===================
+  
+  $ ./run-benchmark.sh
+  
